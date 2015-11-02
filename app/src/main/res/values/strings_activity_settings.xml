@@ -1,0 +1,14 @@
+<resources>
+    <string-array name="pref_sort_options">
+        <item>@string/pref_sort_Popularity_desc_Label</item>
+        <item>@string/pref_sort_Popularity_asc_Label</item>
+        <item>@string/pref_sort_rating_desc_Label</item>
+        <item>@string/pref_sort_rating_asc_Label</item>
+    </string-array>
+    <string-array name="pref_sort_values">
+        <item>@string/pref_sort_Popularity_desc_Value</item>
+        <item>@string/pref_sort_Popularity_asc_Value</item>
+        <item>@string/pref_sort_rating_desc_Value</item>
+        <item>@string/pref_sort_rating_asc_Value</item>
+    </string-array>
+</resources>

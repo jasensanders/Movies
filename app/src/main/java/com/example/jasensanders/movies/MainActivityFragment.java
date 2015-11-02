@@ -103,7 +103,7 @@ public class MainActivityFragment extends Fragment {
         /*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String location = prefs.getString(getString(R.string.pref_location_key),
                 getString(R.string.pref_location_default));*/
-        newmovieTask.execute("popular");
+        newmovieTask.execute("popularD");
     }
 
     public void onStart(){
@@ -256,13 +256,21 @@ public class MainActivityFragment extends Fragment {
             String SortFormat = null;
             String appkey = "749df891d0cc54abbb33461227d40008";
             //Popularity Descending
-            String popular = "popularity.desc";
-            String rating = "vote_average.desc";
+            String popularD = "popularity.desc";
+            String popularA = "popularity.asc";
+            String ratingD = "vote_average.desc";
+            String ratingA = "vote_average.asc";
 
-            if(params[0].equals("popular")){
-                SortFormat = popular;
+            if(params[0].equals("popularD")){
+                SortFormat = popularD;
+            }else if(params[0].equals("popularA")){
+                SortFormat = popularA;
+            }else if(params[0].equals("ratingD")){
+                SortFormat = ratingD;
+            }else if(params[0].equals("ratingA")){
+                SortFormat = ratingA;
             }else{
-                SortFormat = rating;
+                SortFormat = popularD;
             }
 
 
