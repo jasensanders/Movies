@@ -2,6 +2,7 @@ package com.example.jasensanders.movies;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -38,6 +39,22 @@ public class SettingsActivity extends PreferenceActivity {
         return (context.getResources().getConfiguration().screenLayout
                 & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
     }
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        //Add action bar and back button
+
+        // Add 'general' preferences, defined in the XML file
+        addPreferencesFromResource(R.xml.pref_general );
+        bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_sort_key)));
+
+
+        // For all preferences, attach an OnPreferenceChangeListener so the UI summary can be
+        // updated when the preference changes.
+
+    }
+
+
 
 
 

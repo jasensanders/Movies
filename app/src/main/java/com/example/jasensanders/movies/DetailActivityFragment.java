@@ -18,6 +18,11 @@ public class DetailActivityFragment extends Fragment {
 
     public DetailActivityFragment() {
     }
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Add this line in order for this fragment to handle menu events.
+        setHasOptionsMenu(true);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -44,10 +49,11 @@ public class DetailActivityFragment extends Fragment {
                     .setText("User Rating: " +Mrating);
             String Msynopsis = intent.getStringExtra("M_SYNOPSIS");
             ((TextView) detailView.findViewById(R.id.synopsis))
-                    .setText("Overview: \n" +Msynopsis);
+                    .setText("Overview: \n" + Msynopsis);
         }
 
 
         return detailView;
     }
+
 }

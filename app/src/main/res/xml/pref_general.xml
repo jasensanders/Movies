@@ -9,5 +9,4 @@
         android:entries="@array/pref_sort_options" />
 
 
-
 </PreferenceScreen>

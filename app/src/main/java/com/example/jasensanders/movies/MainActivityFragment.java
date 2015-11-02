@@ -2,9 +2,11 @@ package com.example.jasensanders.movies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,7 +18,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -80,8 +81,8 @@ public class MainActivityFragment extends Fragment {
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
-                Toast.makeText(getActivity(), roster.get(position).Title,
-                        Toast.LENGTH_SHORT).show();
+                /*Toast.makeText(getActivity(), roster.get(position).Title,
+                        Toast.LENGTH_SHORT).show();*/
                 Intent detailIntent = new Intent(getActivity(), DetailActivity.class)
                         .putExtra(THUMB, roster.get(position).Thumb)
                         .putExtra(M_TITLE, roster.get(position).Title)
@@ -100,10 +101,10 @@ public class MainActivityFragment extends Fragment {
 
     private void updateMovies(){
         FetchMovieTask newmovieTask = new FetchMovieTask();
-        /*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String location = prefs.getString(getString(R.string.pref_location_key),
-                getString(R.string.pref_location_default));*/
-        newmovieTask.execute("popularD");
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sortPref = prefs.getString(getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_default));
+        newmovieTask.execute(sortPref);
     }
 
     public void onStart(){
