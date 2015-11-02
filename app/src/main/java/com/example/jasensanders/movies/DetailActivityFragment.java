@@ -46,10 +46,10 @@ public class DetailActivityFragment extends Fragment {
                     .setText("Original Release Date: " +Mrelease);
             String Mrating = intent.getStringExtra("M_RATING");
             ((TextView) detailView.findViewById(R.id.rating))
-                    .setText("User Rating: " +Mrating);
+                    .setText("User Rating: " +Mrating+"/10.0");
             String Msynopsis = intent.getStringExtra("M_SYNOPSIS");
             ((TextView) detailView.findViewById(R.id.synopsis))
-                    .setText("Overview: \n" + Msynopsis);
+                    .setText("Overview: \n\n" + Msynopsis);
         }
 
 

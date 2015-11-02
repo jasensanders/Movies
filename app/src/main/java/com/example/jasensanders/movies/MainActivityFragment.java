@@ -255,7 +255,7 @@ public class MainActivityFragment extends Fragment {
             String MovieJsonStr = null;
             //Sort format passed in from settings activity. Either "popular" or "rating"
             String SortFormat = null;
-            String appkey = "749df891d0cc54abbb33461227d40008";
+            String appkey = "<your app API key goes here>";
             //Popularity Descending
             String popularD = "popularity.desc";
             String popularA = "popularity.asc";
