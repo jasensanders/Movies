@@ -1,6 +1,8 @@
 <resources>
+    <string name="action_share">Share</string>
     <string name="app_name">Movies</string>
     <string name="hello_world">Hello world!</string>
+    <string name="NoMovie">Movies!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_detail">Movie Details</string>
     <string name="pref_sort_key">SortBy</string>
@@ -8,14 +10,20 @@
     <string name="title_activity_settings">Sort</string>
     <string name="pref_sort_label">Sort By:</string>
     //Settings Sort Values for API call
+    <string name="favorites_value">favorites</string>
     <string name="pref_sort_Popularity_desc_Value">popularD</string>
     <string name="pref_sort_Popularity_asc_Value">popularA</string>
     <string name="pref_sort_rating_desc_Value">ratingD</string>
     <string name="pref_sort_rating_asc_Value">ratingA</string>
 
     //Settings Labels for values above
+    <string name="favorites_Label">Favorite Movies</string>
     <string name="pref_sort_Popularity_desc_Label">Popularity Descending</string>
     <string name="pref_sort_Popularity_asc_Label">Popularity Ascending</string>
     <string name="pref_sort_rating_desc_Label">Viewer Rating Descending</string>
     <string name="pref_sort_rating_asc_Label">Viewer Rating Ascending</string>
+
+    //TextView Strings
+    <string name="reviewDivider">Reviews: </string>
+    <string name="trailerDivider">Trailers: </string>
 </resources>

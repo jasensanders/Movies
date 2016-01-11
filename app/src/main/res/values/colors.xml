@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="sunshine_blue">#ff1ca8f4</color>
+    <color name="transparent">#80000000</color>
+    <color name="stark_white">#ffffff</color>
+    <color name="movie_lt_blue">#536DFE</color>
+    <color name="movie_dk_blue">#1A237E</color>
+</resources>

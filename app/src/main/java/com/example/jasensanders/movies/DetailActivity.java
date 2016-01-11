@@ -1,8 +1,9 @@
 package com.example.jasensanders.movies;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -12,6 +13,29 @@ public class DetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+        Intent intent = getIntent();
+        Uri data = intent.getData();
+        //If this was not launched by the GridViewAdapter click listener
+        if (savedInstanceState == null && data != null &&  Utility.isTablet(this)) {
+            //Create a bundle to send the uri data to the new DetailFragment
+            Bundle arguments = new Bundle();
+            //this detail view is always launched as an intent from MainActivity's
+            // ForecastFragment so we pass them into a bundle to pass them to our DetailFragment.
+            arguments.putParcelable(DetailActivityFragment.DETAIL_URI, data);
+            DetailListFragment fragment = new DetailListFragment();
+            fragment.setArguments(arguments);
+            //Get a new DetailFragment(fragment) with our uri passed  in as a bundle(Arguments)
+            //and dump it into our weather_detail_container
+            //in the activity_detail.xml layout.
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.movie_detail_container, fragment)
+                    .commit();
+        }else if(savedInstanceState != null && !Utility.isTablet(this) && data != null){
+            Intent Dintent = new Intent(this, DetailActivityFragment.class)
+                    .setData(data);
+            startActivity(Dintent);
+        }
     }
 
 

@@ -1,7 +1,6 @@
 package com.example.jasensanders.movies;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -20,11 +19,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,20 +41,15 @@ import java.net.URL;
 import java.util.ArrayList;
 
 /**
- * A placeholder fragment containing a simple view.
+ * Created by Jasen Sanders on 010,01/10/16.
  */
-public class DetailActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class DetailListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private final String LOG_TAG = DetailActivityFragment.class.getSimpleName();
-
-    //State (default standard view on a Phone)
-    private Context mContext;
-    private boolean FavoritesDetailView = false;
-    private boolean IsPhone = true;
+    private final String LOG_TAG = DetailListFragment.class.getSimpleName();
 
     //Detail Variables
     private ShareActionProvider mShareActionProvider;
-    private ArrayAdapter<String> mTrailerAdapter;
+
     private String Trailers;
     private String Reviews;
     private ArrayList<String> trailerArray;
@@ -76,10 +68,10 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
     private String TrailerShare;
 
     //Views
-    private View detailHeader;
-    private View detailFooter;
+    private LinearLayout trailerListSet;
+    private ViewGroup root;
+
     private TextView mReviews;
-    private ListView trailerList;
     private TextView mTitle;
     private TextView mDate;
     private ImageView mPoster;
@@ -87,119 +79,61 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
     private TextView mSynopsis;
     private Button FavoritesButton;
 
-
-
-
-    public DetailActivityFragment() {
-    }
-
+    //State
+    private boolean FavoritesDetailView = false;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
-        //Uris are only for Favorites
-        //2 ways to get handed a uri in fragment arguments (twoPane) or in intent set data(regular)
-        //Decide how to handle that or if to just get the intents and check if this was launched
-        //by the regular gird view.
-        mContext = getActivity();
-        IsPhone = Utility.isPhone(getActivity());
+
         FavoritesDetailView = Utility.isFavoritesView(getActivity());
 
-        //Get the intent
-        Intent detailIntent = getActivity().getIntent();
-
-        //Initialize variables according to Device type and View
-        if (IsPhone && !FavoritesDetailView) {
-            MovieDetails = detailIntent.getStringArrayExtra("MOVIE");
-
-        }else if (IsPhone && FavoritesDetailView) {
-            mUri = detailIntent.getData();
-
-        }else if (!IsPhone && !FavoritesDetailView){
+        if (!FavoritesDetailView) {
             Bundle arguments = getArguments();
             //This might be null if nothing has been selected yet
-            if(arguments != null){MovieDetails = arguments.getStringArray(DETAIL_ARRAY);
+            if (arguments != null) {
+                MovieDetails = arguments.getStringArray(DETAIL_ARRAY);
             }
-            //else{MovieDetails = new String[]();}
-
-
-        }else if(!IsPhone && FavoritesDetailView){
+        }else{
             Bundle arguments = getArguments();
             //This might be null if nothing has been selected yet
             if(arguments!= null){
                 mUri = arguments.getParcelable(DETAIL_URI);
             }
         }
-
-
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        mTrailerAdapter = new ArrayAdapter<String>(getActivity(), R.layout.trailer_tile, R.id.list_item_trailer_text, new ArrayList<String>());
+        root = container;
+        View view = inflater.inflate(R.layout.fragment_detail_tab, container, false);
+        //trailerTile
         //Inflate the views
-        View detailView = inflater.inflate(R.layout.fragment_detail, container, false);
-        detailHeader = inflater.inflate(R.layout.detail_header, container, false);
-        detailFooter = inflater.inflate(R.layout.reviews_tile, container, false);
-        FavoritesButton = (Button) detailHeader.findViewById(R.id.FavButton);
 
 
+
+        FavoritesButton = (Button) view.findViewById(R.id.FavButton);
 
         //Fill in the View References
-        mReviews = (TextView) detailFooter.findViewById(R.id.reviews_textview);
-        mTitle = (TextView) detailHeader.findViewById(R.id.movieTitle);
-        mPoster = (ImageView) detailHeader.findViewById(R.id.posterView);
-        mDate = (TextView) detailHeader.findViewById(R.id.releaseDate);
-        mRating = (TextView) detailHeader.findViewById(R.id.rating);
-        mSynopsis = (TextView) detailHeader.findViewById(R.id.synopsis);
+        mReviews = (TextView) view.findViewById(R.id.reviews_textview);
+        mTitle = (TextView) view.findViewById(R.id.movieTitle);
+        mPoster = (ImageView) view.findViewById(R.id.posterView);
+        mDate = (TextView) view.findViewById(R.id.releaseDate);
+        mRating = (TextView) view.findViewById(R.id.rating);
+        mSynopsis = (TextView) view.findViewById(R.id.synopsis);
+        trailerListSet = (LinearLayout) view.findViewById(R.id.trailerList);
 
-        trailerList = (ListView) detailView.findViewById(R.id.listview_trailer);
-        trailerList.addHeaderView(detailHeader);
-        trailerList.addFooterView(detailFooter);
-        trailerList.setAdapter(mTrailerAdapter);
-        trailerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-
-                if (mTrailerAdapter.getItem(position - 1).equals("No Trailer Available")) {
-                    Toast.makeText(getActivity(), "No Trailer to Launch.", Toast.LENGTH_SHORT).show();
-                } else {
-                    String TrailerUrl = trailerArray.get(position - 1);
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(TrailerUrl));
-                    if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-                        startActivity(intent);
-                    }
-
-                }
-
-            }
-        });
-
-
-
-        return detailView;
+        return view;
     }
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
 
-    public void onStart() {
-        super.onStart();
+        super.onActivityCreated(savedInstanceState);
+
         updateDetails();
-
-    }
-
-
-    public void updateDetails(){
-
-        if(FavoritesDetailView){
-            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
-        }else{
-            FetchDetailsTask task = new FetchDetailsTask();
-            if(MovieDetails != null){task.execute(MovieDetails[0]);}
-        }
-        trailerList.setAdapter(mTrailerAdapter);
 
     }
 
@@ -220,132 +154,23 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
         }
     }
 
-    private Intent createShareTrailerIntent() {
-        if(TrailerShare != null) {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_TEXT, TrailerShare);
-            return shareIntent;
+    public void updateDetails(){
+
+        if(FavoritesDetailView){
+            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
         }else{
-            String placeHolder = "https://www.youtube.com/watch?v=1P-sUUUfamw";
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_TEXT, placeHolder);
-            return shareIntent;
+            FetchDetailsTask task = new FetchDetailsTask();
+            if(MovieDetails != null){task.execute(MovieDetails[0]);}
         }
+
+
     }
-
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
-        if (null != mUri) {
-            // Now create and return a CursorLoader that will take care of
-            // creating a Cursor for the data being displayed.
-            return new CursorLoader(
-                    getActivity(),
-                    mUri,
-                    MovieFavContract.FAVORITES_COLUMNS,
-                    null,
-                    null,
-                    null
-            );
-
-        }
-        return null;
-    }
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (data != null && data.moveToFirst()) {
-
-            //Get the data from the Cursor
-            final String id = data.getString(MovieFavContract.COL_MOVIE_ID);
-            final String Thumb = data.getString(MovieFavContract.COL_THUMB);
-            final String poster = data.getString(MovieFavContract.COL_POSTER);
-            final String movietitle = data.getString(MovieFavContract.COL_TITLE);
-            final String date = data.getString(MovieFavContract.COL_DATE);
-            final String rating = data.getString(MovieFavContract.COL_RATING);
-            final String synopsis = data.getString(MovieFavContract.COL_SYNOPSIS);
-            Trailers = data.getString(MovieFavContract.COL_TRAILERS);
-            Reviews = data.getString(MovieFavContract.COL_REVIEWS);
-
-            //Fill in the Header Views
-            mTitle.setText(movietitle);
-            Picasso
-                    .with(getActivity())
-                    .load(poster)
-                    .fit()
-                    .into(mPoster);
-            mDate.setText("Release Date: " + date);
-            mRating.setText("User Rating: " + rating + "/10.0");
-            mSynopsis.setText("Overview: \n\n" + synopsis);
-            FavoritesButton.setText("Remove Favorite");
-
-            //Fill in the Footer Views
-            mReviews.setText(Reviews);
-
-            //Make A new trailer adapter and Add header and footer to listView, set adapter and onclick
-
-            //Process Trailers and Fill the adapter
-            trailerArray = Utility.trailerSplitter(Trailers, LOG_TAG);
-            trailerLaunchText = Utility.friendlyText(trailerArray);
-            mTrailerAdapter.clear();
-            for(int i =0; i<trailerLaunchText.size(); i++){
-                mTrailerAdapter.add(trailerLaunchText.get(i));
-            }
-
-            //Add header and footer and set adapter
-
-
-            //Set the Trailer share url
-            if(trailerArray.get(0).contentEquals("none")){TrailerShare = "https://www.imdb.com";}
-            else{TrailerShare = trailerArray.get(0);}
-
-            //Set onClick for favorites button
-            FavoritesButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    //If we click this button now then we delete it.
-                    Uri deleteMovie = MovieFavContract.FavoritesEntry.buildMovieIdUri(id);
-                    int rowsDeleted;
-                    rowsDeleted = getActivity().getContentResolver().delete(deleteMovie,
-                            MovieFavContract.FavoritesEntry.COLUMN_MOVIE_ID + " = ?",
-                            new String[]{id});
-                    if (rowsDeleted == 1) {
-                        Toast.makeText(getActivity(), "Movie removed from Favorites.", Toast.LENGTH_SHORT).show();
-                    }
-
-                }
-
-            });
-
-
-
-
-            // If onCreateOptionsMenu has already happened, we need to update the share intent now.
-            if (mShareActionProvider != null) {
-                mShareActionProvider.setShareIntent(createShareTrailerIntent());
-            }
-
-
-
-
-        }
-    }
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) { }
-
-
-
-
     public class FetchDetailsTask extends AsyncTask<String, Void, String[]> {
 
         private final String LOG_TAG = FetchDetailsTask.class.getSimpleName();
 
 
         protected String[] doInBackground(String... params) {
-
             if (params[0] == null) {
                 return null;
             }
@@ -487,12 +312,10 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
             //Load Results into variables
             try {
                 Trailers = result[0];
-                mTrailerAdapter.clear();
+
                 trailerArray = Utility.trailerSplitter(result[0], LOG_TAG);
                 trailerLaunchText = Utility.friendlyText(trailerArray);
-                for(int i =0; i<trailerLaunchText.size(); i++){
-                    mTrailerAdapter.add(trailerLaunchText.get(i));
-                }
+
 
             }
             catch (NullPointerException e) {
@@ -510,7 +333,6 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
             //Set the Trailer share url
             if(trailerArray.get(0).contentEquals("none")){TrailerShare = "https://www.imdb.com";}
             else{TrailerShare = trailerArray.get(0);}
-
 
             //Fill in Data for insert
             final String id = MovieDetails[0];
@@ -532,6 +354,7 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
             mRating.setText("User Rating: " + Mrating + "/10.0");
             final String Msynopsis = MovieDetails[6];
             mSynopsis.setText("Overview: \n\n" + Msynopsis);
+
 
             //Set button text
             FavoritesButton.setText("Add to Favorites");
@@ -574,6 +397,43 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
                 }
 
             });
+
+            //Hope this works
+            for(int i =0; i<trailerLaunchText.size(); i++){
+               //mTrailerAdapter.add(trailerLaunchText.get(i));
+
+                LinearLayout tile = (LinearLayout) LayoutInflater.from(getActivity()).inflate(R.layout.trailer_tile, root, false);
+                TextView set = (TextView) tile.findViewById(R.id.list_item_trailer_text);
+                set.setText(trailerLaunchText.get(i));
+                tile.setId(i);
+                final int TID = i;
+                tile.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        if (trailerLaunchText.get(TID).equals("No Trailer Available")) {
+                            Toast.makeText(getActivity(), "No Trailer to Launch.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            String TrailerUrl = trailerArray.get(TID);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(TrailerUrl));
+                            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                                startActivity(intent);
+                            }
+
+                        }
+
+                    }
+
+                });
+                trailerListSet.addView(tile);
+
+
+            }
+
+            // If onCreateOptionsMenu has already happened, we need to update the share intent now.
+            if (mShareActionProvider != null) {
+                mShareActionProvider.setShareIntent(createShareTrailerIntent());
+            }
+
+
 
         }
 
@@ -655,10 +515,143 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
 
     }//end of FetchDetailsTask
 
+    private Intent createShareTrailerIntent() {
+        if(TrailerShare != null) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, TrailerShare);
+            return shareIntent;
+        }else{
+            String placeHolder = "https://www.youtube.com/watch?v=1P-sUUUfamw";
+            Log.v(LOG_TAG, "Trailer Share Still Null!!");
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, placeHolder);
+            return shareIntent;
+        }
+    }
 
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        if (null != mUri) {
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    mUri,
+                    MovieFavContract.FAVORITES_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
+
+        }
+        return null;
+    }
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+        if (data != null && data.moveToFirst()) {
+
+            //Get the data from the Cursor
+            final String id = data.getString(MovieFavContract.COL_MOVIE_ID);
+            final String Thumb = data.getString(MovieFavContract.COL_THUMB);
+            final String poster = data.getString(MovieFavContract.COL_POSTER);
+            final String movietitle = data.getString(MovieFavContract.COL_TITLE);
+            final String date = data.getString(MovieFavContract.COL_DATE);
+            final String rating = data.getString(MovieFavContract.COL_RATING);
+            final String synopsis = data.getString(MovieFavContract.COL_SYNOPSIS);
+            Trailers = data.getString(MovieFavContract.COL_TRAILERS);
+            Reviews = data.getString(MovieFavContract.COL_REVIEWS);
+
+            //Fill in the Header Views
+            mTitle.setText(movietitle);
+            Picasso
+                    .with(getActivity())
+                    .load(poster)
+                    .fit()
+                    .into(mPoster);
+            mDate.setText("Release Date: " + date);
+            mRating.setText("User Rating: " + rating + "/10.0");
+            mSynopsis.setText("Overview: \n\n" + synopsis);
+            FavoritesButton.setText("Remove Favorite");
+
+            //Fill in the Footer Views
+            mReviews.setText(Reviews);
+
+            //Process Trailers
+            trailerArray = Utility.trailerSplitter(Trailers, LOG_TAG);
+            trailerLaunchText = Utility.friendlyText(trailerArray);
+
+            //Set the Trailer share url
+            if (trailerArray.get(0).contentEquals("none")) {
+                TrailerShare = "https://www.imdb.com";
+            } else {
+                TrailerShare = trailerArray.get(0);
+            }
+
+            //Set onClick for favorites button
+            FavoritesButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    //If we click this button now then we delete it.
+                    Uri deleteMovie = MovieFavContract.FavoritesEntry.buildMovieIdUri(id);
+                    int rowsDeleted;
+                    rowsDeleted = getActivity().getContentResolver().delete(deleteMovie,
+                            MovieFavContract.FavoritesEntry.COLUMN_MOVIE_ID + " = ?",
+                            new String[]{id});
+                    if (rowsDeleted == 1) {
+                        Toast.makeText(getActivity(), "Movie removed from Favorites.", Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+
+            });
+
+            //Hope this works
+            for(int i =0; i<trailerLaunchText.size(); i++) {
+
+                LinearLayout tile = (LinearLayout) LayoutInflater.from(getActivity()).inflate(R.layout.trailer_tile, root, false);
+                TextView set = (TextView) tile.findViewById(R.id.list_item_trailer_text);
+                set.setText(trailerLaunchText.get(i));
+                tile.setId(i);
+                final int TID = i;
+                tile.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        if (trailerLaunchText.get(TID).equals("No Trailer Available")) {
+                            Toast.makeText(getActivity(), "No Trailer to Launch.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            String TrailerUrl = trailerArray.get(TID);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(TrailerUrl));
+                            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                                startActivity(intent);
+                            }
+
+                        }
+
+                    }
+
+                });
+                trailerListSet.addView(tile);
+            }
 
 
-}//end of DetailsFragment
+            // If onCreateOptionsMenu has already happened, we need to update the share intent now.
+            if (mShareActionProvider != null) {
+                mShareActionProvider.setShareIntent(createShareTrailerIntent());
+            }
 
 
+        }
+
+    }
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        loader.cancelLoad();
+    }
+
+
+}

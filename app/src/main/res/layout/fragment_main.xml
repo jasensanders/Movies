@@ -4,6 +4,9 @@
     android:layout_height="wrap_content"
     android:numColumns="4"
     android:gravity="center"
-    android:background="#0e1147" />
+    android:background="#0e1147"
+    android:drawSelectorOnTop="true"
+    android:listSelector="@drawable/grid_selector"
+    android:choiceMode="singleChoice" />
 
 

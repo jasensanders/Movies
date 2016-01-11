@@ -2,12 +2,14 @@ package com.example.jasensanders.movies;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -15,11 +17,10 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
-import android.widget.ImageView;
+import android.widget.Toast;
 
-import com.squareup.picasso.Picasso;
+import com.example.jasensanders.movies.data.MovieFavContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,23 +37,44 @@ import java.util.ArrayList;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment {
-    //Adapter for GridView
-    private ImageAdapter madapter;
-    //Keys for Intents
-    public static final String THUMB = "THUMB";
-    public static final String M_POSTERURL = "M_POSTERURL";
-    public static final String M_TITLE = "M_TITLE";
-    public static final String M_DATE = "M_DATE";
-    public static final String M_RATING = "M_RATING";
-    public static final String M_SYNOPSIS = "M_SYNOPSIS";
+public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+
+    private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
+    //Adapter for GridView Standard
+    private GridViewAdapter madapter;
+    //Adapter for GridView Favorites
+    private FavoritesAdapter fadapter;
+    //Saved position set to invalid by default
+    private int mPostition = GridView.INVALID_POSITION;
+    private static final String SELECTED_KEY = "selected_position";
+    private GridView mGridView;
+    private static final int FAVORITES_LOADER = 0;
+    private boolean FavoritesView = false;
+    private boolean IsTablet = false;
+
+    //Key for Intent
+    public static final String MOVIE = "MOVIE";
+
 
     //ArrayList of movies
     ArrayList<Movie> roster = new ArrayList<Movie>();
 
 
 
-    private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
+
+
+
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        public void onItemSelected(Uri dateUri, String[] bob);
+    }
 
     public MainActivityFragment() {
     }
@@ -60,6 +82,9 @@ public class MainActivityFragment extends Fragment {
         super.onCreate(savedInstanceState);
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
+        IsTablet = Utility.isTablet(getActivity());
+        FavoritesView = Utility.isFavoritesView(getActivity());
+
     }
 
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -70,41 +95,95 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        GridView gridview = (GridView) rootView.findViewById(R.id.gridView);
-        madapter = new ImageAdapter(getActivity(), roster);
+        mGridView = (GridView) rootView.findViewById(R.id.gridView);
+        //mGridView.setEmptyView(/*TODO Create xml empty view and load here*/);
 
-        gridview.setAdapter(madapter);
-        //Log.d(LOG_TAG, "GridViewAdapterSet");
 
-        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v,
-                                    int position, long id) {
-                /*Toast.makeText(getActivity(), roster.get(position).Title,
-                        Toast.LENGTH_SHORT).show();*/
-                Intent detailIntent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(THUMB, roster.get(position).Thumb)
-                        .putExtra(M_TITLE, roster.get(position).Title)
-                        .putExtra(M_POSTERURL, roster.get(position).Poster)
-                        .putExtra(M_DATE, roster.get(position).Date)
-                        .putExtra(M_RATING, roster.get(position).Rating)
-                        .putExtra(M_SYNOPSIS, roster.get(position).Synopsis);
-                startActivity(detailIntent);
+        //When user clicks on an item pull Movie id from Roster or Cursor and pass to Detail Activity
+
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView adapterView, View view, int position, long l) {
+                // CursorAdapter returns a cursor at the correct position for getItem(), or null
+                // if it cannot seek to that position.
+                if (FavoritesView) {
+
+                    Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
+                    if (cursor != null) {
+                        if(IsTablet) {
+                        ((Callback) getActivity()).onItemSelected(
+                                MovieFavContract.FavoritesEntry.buildMovieIdUri(cursor.getString(MovieFavContract.COL_MOVIE_ID)), null);
+
+                        }else {
+
+                            Uri contentUri = MovieFavContract.FavoritesEntry.buildMovieIdUri(cursor.getString(MovieFavContract.COL_MOVIE_ID));
+                            Intent intent = new Intent(getActivity(), DetailActivity.class)
+                                    .setData(contentUri);
+
+                            startActivity(intent);
+                        }
+
+                    }
+                } else {
+                    if(IsTablet){
+                        ((Callback) getActivity()).onItemSelected(null, roster.get(position).toArray());
+
+                    }else {
+
+                        Intent detailIntent = new Intent(getActivity(), DetailActivity.class)
+                                .putExtra(MOVIE, roster.get(position).toArray());
+
+                        startActivity(detailIntent);
+                    }
+                }
+
+                mPostition = position;
+
             }
-        });
 
+        });
+        //If app was rotated, check saved instance state for selected key
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
+            mPostition = savedInstanceState.getInt(SELECTED_KEY);
+        }
 
 
         return rootView;
     }
 
+
     private void updateMovies(){
-        FetchMovieTask newmovieTask = new FetchMovieTask();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String sortPref = prefs.getString(getString(R.string.pref_sort_key),
-                getString(R.string.pref_sort_default));
-        newmovieTask.execute(sortPref);
+
+        Context here = getActivity();
+        FavoritesView = Utility.isFavoritesView(here);
+        String sortPref = Utility.getPrefView(here);
+        //If the Sort Setting is set to Favorites
+        if(FavoritesView){
+            //If the DataBase is empty, notify User and call FetchMovieTask
+            if(Utility.isDBEmpty(here)){
+                Toast.makeText(here, "No Favorites Saved",
+                        Toast.LENGTH_SHORT).show();
+            }else { //otherwise call the Loader and Load the Favorites
+                getLoaderManager().initLoader(FAVORITES_LOADER, null, this);
+            }
+        //otherwise call FetchMovieTask and pass the Sort Prefrence
+        }else{ FetchMovieTask newmovieTask = new FetchMovieTask();
+            newmovieTask.execute(sortPref);}
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        //When the tablet rates and the app is destroyed saved the position of the selected key in
+        //the savedInstanceState.
+        //If app was just started app will not have a position, so check first
+        if(mPostition != GridView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, mPostition);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     public void onStart(){
@@ -113,75 +192,9 @@ public class MainActivityFragment extends Fragment {
     }
 
 
-
-    public class ImageAdapter extends ArrayAdapter<Movie> {
-        private Context context;
-        private LayoutInflater inflater;
-        private ArrayList<Movie> moviedata;
-        private final String LOG_TAG = ImageAdapter.class.getSimpleName();
-
-        public ImageAdapter(Context context, ArrayList<Movie> data) {
-            super(context, R.layout.image_tile, data);
-
-            this.context = context;
-            this.moviedata = data;
-
-            inflater = LayoutInflater.from(context);
-            //Log.d(LOG_TAG, "ImageAdapterInstantiated");
-        }
-
-
-
-        // create a new ImageView for each item referenced by the Adapter
-        public View getView(int position, View convertView, ViewGroup parent) {
-            Movie current = moviedata.get(position);
-            String url = current.Thumb;
-
-            //Log.d(LOG_TAG, "AdapterGetViewCalled");
-            if (null == convertView) {
-                convertView = inflater.inflate(R.layout.image_tile, parent, false);
-            }
-
-
-            Picasso
-                    .with(context)
-                    .load(url)
-                    .error(R.mipmap.ic_launcher)
-                    .fit() // will explain later
-                    .into((ImageView) convertView);
-
-            return convertView;
-
-
-        }
-    }
-
-    public class Movie{
-
-        public String Thumb;
-        public String Poster;
-        public String Title;
-        public String Date;
-        public String Rating;
-        public String Synopsis;
-
-        public Movie(String Thumb, String Title, String Poster, String Date, String Rating, String Synopsis){
-            this.Thumb = Thumb;
-            this.Title = Title;
-            this.Poster = Poster;
-            this.Date = Date;
-            this.Rating = Rating;
-            this.Synopsis = Synopsis;
-        }
-
-    }
-
     public class FetchMovieTask extends AsyncTask<String, Void, ArrayList<Movie>> {
 
         private final String LOG_TAG = FetchMovieTask.class.getSimpleName();
-
-
-
 
         /**
          * Take the String representing the complete result in JSON Format and
@@ -200,6 +213,7 @@ public class MainActivityFragment extends Fragment {
             final String TMDB_DATE = "release_date";
             final String TMDB_RATING = "vote_average";
             final String TMDB_SYNOPSIS = "overview";
+            final String TMDB_ID = "id";
 
             String thumbBaseUrl = "http://image.tmdb.org/t/p/w92/";
             String posterBaseUrl = "http://image.tmdb.org/t/p/w185/";
@@ -210,32 +224,32 @@ public class MainActivityFragment extends Fragment {
 
             ArrayList<Movie> resultMovies = new ArrayList<Movie>();
             for(int i = 0; i < movieArray.length(); i++) {
-                // Strings to hold the data default to null"
-                String title = null;
-                String synopsis =null;
-                String thumb = null;
-                String poster = null;
-                String date = null;
-                String rating = null;
-
+                // Strings to hold the data"
+                String id, thumb, poster, title, date, rating, synopsis, reviews, trailers;
 
                 // Get the JSON object representing the Movie
                 JSONObject tmdb_movie = movieArray.getJSONObject(i);
 
-                title = tmdb_movie.getString(TMDB_TITLE);
-                synopsis = tmdb_movie.getString(TMDB_SYNOPSIS);
+                id = tmdb_movie.getString(TMDB_ID);
                 thumb = thumbBaseUrl + tmdb_movie.getString(TMDB_IMAGE);
                 poster = posterBaseUrl + tmdb_movie.getString(TMDB_IMAGE);
+                title = tmdb_movie.getString(TMDB_TITLE);
                 date = tmdb_movie.getString(TMDB_DATE);
                 rating = tmdb_movie.getString(TMDB_RATING);
-                Movie currentMovie = new Movie(thumb, title, poster, date, rating, synopsis );
+                synopsis = tmdb_movie.getString(TMDB_SYNOPSIS);
+                reviews = "";
+                trailers = "";
+                Movie currentMovie = new Movie(id, thumb, poster, title, date, rating, synopsis, reviews, trailers );
                 resultMovies.add(currentMovie);
+
             }
 
 
             return resultMovies;
 
         }
+
+
 
         @Override
         protected ArrayList<Movie> doInBackground(String... params) {
@@ -245,7 +259,6 @@ public class MainActivityFragment extends Fragment {
                 return null;
             }
 
-
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -254,32 +267,38 @@ public class MainActivityFragment extends Fragment {
             // Will contain the raw JSON response as a string.
             String MovieJsonStr = null;
             //Sort format passed in from settings activity. Either "popular" or "rating"
+            //Ascending or Descending order
             String SortFormat = null;
-            String appkey = "<your app API key goes here>";
-            //Popularity Descending
+            //App API key from tmdb.org
+            String appkey = BuildConfig.TMDB_API_KEY;
+            //Settings options determine API call
             String popularD = "popularity.desc";
             String popularA = "popularity.asc";
             String ratingD = "vote_average.desc";
             String ratingA = "vote_average.asc";
-
-            if(params[0].equals("popularD")){
-                SortFormat = popularD;
-            }else if(params[0].equals("popularA")){
-                SortFormat = popularA;
-            }else if(params[0].equals("ratingD")){
-                SortFormat = ratingD;
-            }else if(params[0].equals("ratingA")){
-                SortFormat = ratingA;
-            }else{
-                SortFormat = popularD;
+            //switch based on which setting was selected in sort setting
+            switch (params[0]){
+                case "popularD":
+                    SortFormat = popularD;
+                    break;
+                case "popularA":
+                    SortFormat = popularA;
+                    break;
+                case "ratingD":
+                    SortFormat = ratingD;
+                    break;
+                case "ratingA":
+                    SortFormat = ratingA;
+                    break;
+                default:
+                    SortFormat = popularD;
+                    break;
             }
 
 
-            try {
-                // Construct the URL for the OpenWeatherMap query
-                // Possible parameters are available at OWM's forecast API page, at
-                // http://openweathermap.org/API#forecast
 
+            try {
+                // Construct the URL for the TMDB query
                 final String TMDB_BASE_URL =
                         "http://api.themoviedb.org/3/discover/movie?";
                 final String QUERY_PARAM = "sort_by";
@@ -291,8 +310,6 @@ public class MainActivityFragment extends Fragment {
                         .build();
 
                 URL url = new URL(builtUri.toString());
-
-                Log.v(LOG_TAG, "Built URI " + builtUri.toString());
 
                 // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -341,6 +358,7 @@ public class MainActivityFragment extends Fragment {
             }
             //Hope this works!!
             try {
+                //This calls get data from Json then returns the arraylist of movies to onPostExecute
                 return getMovieDataFromJson(MovieJsonStr);
             } catch (JSONException e) {
                 Log.e(LOG_TAG, e.getMessage(), e);
@@ -352,14 +370,89 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(ArrayList<Movie> result) {
+
             if (result != null) {
-                madapter.clear();
-                roster = result;
-                for(Movie item : result) {
-                    madapter.add(item);
+                if(madapter != null) {
+                    madapter.clear();
+                   // mGridView.setOnItemClickListener(null);
+
+                    roster = result;
+                    for (Movie item : result) {
+                        madapter.add(item);
+                    }
+
+                    mGridView.setAdapter(madapter);
+
+                }
+                else{
+                    if(fadapter != null){fadapter = null;}
+
+                    madapter = new GridViewAdapter(getActivity(), new ArrayList<Movie>());
+                    roster = result;
+                    for(Movie item: result){
+                        madapter.add(item);
+
+                    }
+                    mGridView.setAdapter(madapter);
+
                 }
                 // New data is back from the server.  Hooray!
+                // If user has already highlighted a selection smooth scroll to it.
+                if (mPostition != GridView.INVALID_POSITION) {
+                    //if user has already highlighted a selection smooth scroll to it.
+                    mGridView.smoothScrollToPosition(mPostition);
+                }
             }
+
         }
     }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        // This is called when a new Loader needs to be created.  This
+        // fragment only uses one loader, so we don't care about checking the id.
+
+        // To only show current and future dates, get the String representation for today,
+        // and filter the query to return weather only for dates after or including today.
+
+        // Sort order:  Ascending, by when they were inserted.
+        String sortOrder = MovieFavContract.FavoritesEntry._ID + " ASC";
+
+        Uri getEverythingUri = MovieFavContract.FavoritesEntry.CONTENT_URI;
+
+
+        // Now create and return a CursorLoader that will take care of
+        // creating a Cursor for the data being displayed.
+        return new CursorLoader(
+                getActivity(), //context
+                getEverythingUri, //uri for loader to pass to content provider
+                MovieFavContract.FAVORITES_COLUMNS, //projection array to hold result of sql query
+                null,
+                null,
+                sortOrder
+        );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+        if(fadapter == null){
+            fadapter = new FavoritesAdapter(getActivity(), data, 0);
+        }else{
+            fadapter.swapCursor(data);
+        }
+        if(madapter != null){
+            madapter.clear();
+            madapter = null;}
+        mGridView.setAdapter(fadapter);
+        if (mPostition != GridView.INVALID_POSITION) {
+            //If user has already highlighted a selection smooth scroll to it.
+            mGridView.smoothScrollToPosition(mPostition);
+        }
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) { }
 }

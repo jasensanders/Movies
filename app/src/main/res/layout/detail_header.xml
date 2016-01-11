@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    tools:context="com.example.jasensanders.movies.DetailActivityFragment"
+    android:background="@color/movie_dk_blue"
+    style="@style/Base.Theme.AppCompat.Light">
+
+    <TextView android:text="@string/NoMovie" android:layout_width="match_parent"
+        android:id="@+id/movieTitle"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/stark_white"
+        android:fontFamily="sans-serif-condensed"
+        android:textSize="70sp"
+        android:padding="20sp"
+        android:background="@color/movie_lt_blue" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="200dp"
+            android:layout_height="350dp"
+            android:id="@+id/posterView"
+            android:foregroundGravity="center_vertical|center_horizontal" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal">
+            <TextView android:text="@string/hello_world"
+                android:layout_width="match_parent"
+                android:id="@+id/releaseDate"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:textColor="@color/stark_white"
+                android:fontFamily="sans-serif-condensed"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:gravity="center_vertical|center_horizontal" />
+
+            <TextView android:text="@string/hello_world"
+                android:id= "@+id/rating"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:textColor="@color/stark_white"
+                android:fontFamily="sans-serif-condensed"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:gravity="center_vertical|center_horizontal" />
+
+            <Button
+                style="@style/Base.V21.Theme.AppCompat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/FavButton"
+                android:gravity="center_vertical|center_horizontal"
+                android:layout_marginTop="30sp" />
+
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/synopsis"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:textColor="@color/stark_white"
+        android:gravity="center_vertical"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:fontFamily="sans-serif-condensed"
+        android:layout_marginBottom="20dp"/>
+
+    <View style="@style/Divider" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="20dp"
+        android:text="@string/trailerDivider"
+        android:fontFamily="sans-serif-condensed"
+        android:textSize="25sp"
+        android:textColor="@color/stark_white"/>
+
+</LinearLayout>
